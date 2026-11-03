@@ -5,7 +5,8 @@
   "exports": {
     "./graph": "./graph.cjs",
     "./runtime": "./runtime.cjs",
-    "./environment": "./environment.cjs"
+    "./environment": "./environment.cjs",
+    "./platform": "./platform.cjs"
   },
   "dependencies": {
     "@limulus/editor-core": "0.1.0"

@@ -1,0 +1,161 @@
+name: Build and release clients
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      server_ref:
+        description: 'Backend commit/tag/branch (defaults to .github/server-ref)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  backend_revision:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.revision.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: clients
+          persist-credentials: false
+      - name: Select backend revision
+        id: ref
+        env:
+          SERVER_REF: ${{ inputs.server_ref }}
+        run: |
+          ref="${SERVER_REF:-$(cat clients/.github/server-ref)}"
+          if [[ -z "$ref" || "$ref" == *$'\n'* || "$ref" == *$'\r'* ]]; then
+            echo 'Expected one nonempty backend revision.' >&2
+            exit 1
+          fi
+          printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: LimulusGraph/server
+          ref: ${{ steps.ref.outputs.ref }}
+          path: server
+          persist-credentials: false
+      - name: Resolve immutable backend commit
+        id: revision
+        run: echo "sha=$(git -C server rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Validate release version
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python -c 'import json,os; version=json.load(open("clients/package.json"))["version"]; assert os.environ["RELEASE_TAG"] == "v" + version, "Release tag must match package.json version"'
+
+  build:
+    needs: backend_revision
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+          - runner: macos-15
+            target: darwin-arm64
+          - runner: windows-2025
+            target: win32-x64
+          - runner: windows-11-arm
+            target: win32-arm64
+    runs-on: ${{ matrix.runner }}
+    env:
+      LIMULUS_NO_BROWSER: '1'
+    defaults:
+      run:
+        shell: bash
+        working-directory: clients
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: clients
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: LimulusGraph/server
+          ref: ${{ needs.backend_revision.outputs.sha }}
+          path: server
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: clients/package-lock.json
+      - uses: actions/setup-go@v7
+        with:
+          go-version: '1.26.x'
+          cache: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Check native build architecture
+        env:
+          EXPECTED_TARGET: ${{ matrix.target }}
+        run: node -e 'if (`${process.platform}-${process.arch}` !== process.env.EXPECTED_TARGET) throw new Error("Runner architecture mismatch")'
+      - name: Install workspace dependencies
+        run: npm ci
+      - name: Build standalone app and VS Code extension
+        run: npm run build
+      - name: Test shared editor and both hosts
+        run: npm test
+      - name: Test packaging validation
+        run: npm run test:packaging
+      - name: Ensure Windows installer compiler is available
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          function Find-Compiler {
+            Get-ChildItem -Path "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe", "$env:ProgramFiles\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+          }
+          $compiler = Find-Compiler
+          if (!$compiler) {
+            choco install innosetup --yes --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Could not install Inno Setup' }
+            $compiler = Find-Compiler
+          }
+          if (!$compiler) { throw 'Inno Setup compiler not found' }
+          "ISCC=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Package runtime-bundled app, native installer and VSIX
+        run: |
+          node scripts/package-web.mjs
+          python scripts/package-installer.py
+          python apps/vscode-extension/scripts/package.py
+          cp apps/vscode-extension/*.vsix artifacts/
+      - name: Verify standalone and extension packages outside the checkout
+        run: python scripts/verify_web_package.py --clients . --server ../server
+      - name: Verify native installer payload and launch
+        run: python scripts/verify_installer.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: limulus-clients-${{ matrix.target }}
+          path: clients/artifacts/*
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: limulus-clients-*
+          path: release
+          merge-multiple: true
+      - name: Publish standalone installers and VS Code extensions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" release/* --verify-tag --generate-notes

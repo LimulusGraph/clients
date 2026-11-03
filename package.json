@@ -18,7 +18,9 @@
     "build:ui": "npm run build:frontend -w @limulus/client-web && npm run build:webview -w ./apps/vscode-extension",
     "test": "node --test test/*.test.cjs apps/vscode-extension/test/*.test.cjs",
     "package:extension": "npm run package -w ./apps/vscode-extension",
-    "package:web": "npm run build:web && node scripts/package-web.mjs"
+    "package:web": "npm run build:web && node scripts/package-web.mjs",
+    "package:installer": "npm run package:web && node scripts/run-python.mjs scripts/package-installer.py",
+    "test:packaging": "node scripts/run-python.mjs -m unittest discover -s scripts -p \"test_*.py\""
   },
   "devDependencies": {
     "vite": "8.0.16"

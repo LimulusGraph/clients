@@ -1,3 +1,4 @@
+const { defaultPython, venvPython } = require('@limulus/node-host/platform');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -20,7 +21,7 @@ test('SSE parser handles split unicode, multiple frames, and CRLF', async () => 
 });
 
 test('managed backend starts once, requires its token, runs universes, and stops', { timeout: 20000 }, async t => {
-  const runtime = new Runtime(root, () => ({ pythonPath: 'python3' }), output);
+  const runtime = new Runtime(root, () => ({ pythonPath: defaultPython() }), output);
   t.after(() => runtime.stop());
   let first, second;
   try { [first, second] = await Promise.all([runtime.start(), runtime.start()]); }

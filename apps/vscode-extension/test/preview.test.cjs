@@ -1,3 +1,4 @@
+const { defaultPython, venvPython } = require('@limulus/node-host/platform');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
@@ -14,7 +15,7 @@ function setup(parser) {
     Uri: { file: uri, joinPath: (root, ...rest) => uri(path.join(root.fsPath, ...rest)), parse: uri },
     Range: class { constructor(startLine, startColumn, endLine, endColumn) { Object.assign(this, { startLine, startColumn, endLine, endColumn }); } },
     workspace: {
-      getConfiguration: () => ({ get: () => 'python3' }),
+      getConfiguration: () => ({ get: () => defaultPython() }),
       onDidChangeTextDocument: fn => { callbacks.change = fn; return disposable; },
       onDidSaveTextDocument: fn => { callbacks.save = fn; return disposable; },
       onDidOpenTextDocument: fn => { callbacks.open = fn; return disposable; },

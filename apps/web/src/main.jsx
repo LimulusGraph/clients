@@ -95,8 +95,8 @@ function App() {
     </header>
     {error && <div role="alert" className="error">{error}<button onClick={() => setError('')}>Dismiss</button></div>}
     <nav className="tabs" aria-label="Projects">{tabs.map(tab => <div key={tab.id} className={tab.id === activeId ? 'tab active' : 'tab'}>
-      <button onClick={() => setActiveId(tab.id)} title={tab.host.path}>{tab.host.path.split('/').pop()}{tab.host.dirty || tab.host.drafts.size ? ' •' : ''}{tab.host.running ? ' ▶' : ''}</button>
-      <button aria-label={`Close ${tab.host.path.split('/').pop()}`} onClick={() => handle(() => close(tab))}>×</button>
+      <button onClick={() => setActiveId(tab.id)} title={tab.host.path}>{tab.host.path.split(/[\\/]/).pop()}{tab.host.dirty || tab.host.drafts.size ? ' •' : ''}{tab.host.running ? ' ▶' : ''}</button>
+      <button aria-label={`Close ${tab.host.path.split(/[\\/]/).pop()}`} onClick={() => handle(() => close(tab))}>×</button>
     </div>)}</nav>
     {tabs.map(tab => <Project key={tab.id} host={tab.host} active={tab.id === activeId} />)}
     {!tabs.length && <div className="welcome"><h1>Limulus</h1><p>Create or open a graph to start a universe.</p><button onClick={() => handle(create)}>New graph</button></div>}

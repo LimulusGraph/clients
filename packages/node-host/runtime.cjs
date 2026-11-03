@@ -1,3 +1,4 @@
+const { defaultPython, backendName, terminate } = require('./platform.cjs');
 const { ProjectEnvironment } = require('./environment.cjs');
 const { spawn } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
@@ -29,12 +30,12 @@ class Runtime {
     try { return await this.starting; } finally { this.starting = null; }
   }
   async launch() {
-    if (!['darwin', 'linux'].includes(process.platform)) throw new Error('Limulus runtimes currently support macOS and Linux.');
+    if (!['darwin', 'linux', 'win32'].includes(process.platform)) throw new Error('Limulus runtimes currently support macOS, Linux and Windows.');
     const settings = this.config();
-    const binary = settings.serverPath || path.join(this.extensionPath, 'bin', `limulus-server-${process.platform}-${process.arch}`);
+    const binary = settings.serverPath || path.join(this.extensionPath, 'bin', backendName());
     await fs.access(binary);
     this.token = randomBytes(32).toString('hex');
-    const child = spawn(binary, [], { cwd: this.extensionPath, env: { ...process.env, LIMULUS_HOST: '127.0.0.1', LIMULUS_PORT: '0', LIMULUS_TOKEN: this.token, LIMULUS_PYTHON: settings.pythonPath || 'python3' }, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawn(binary, [], { windowsHide: true, cwd: this.extensionPath, env: { ...process.env, PYTHONUTF8: '1', LIMULUS_HOST: '127.0.0.1', LIMULUS_PORT: '0', LIMULUS_TOKEN: this.token, LIMULUS_PYTHON: settings.pythonPath || defaultPython() }, stdio: ['ignore', 'pipe', 'pipe'] });
     this.child = child;
     const ready = new Promise((resolve, reject) => {
       let pending = '', settled = false, startupError = '';
@@ -42,7 +43,7 @@ class Runtime {
         if (settled) return;
         settled = true;
         clearTimeout(timer);
-        if (err) { child.kill('SIGTERM'); reject(err); } else resolve(endpoint);
+        if (err) { terminate(child); reject(err); } else resolve(endpoint);
       };
       const timer = setTimeout(() => finish(new Error('Timed out starting the Limulus server. See Limulus output.')), 15000);
       child.stdout.on('data', bytes => {
@@ -64,7 +65,7 @@ class Runtime {
     });
     const endpoint = await ready;
     const response = await fetch(`${endpoint}/api/health`, { headers: { Authorization: `Bearer ${this.token}` }, signal: AbortSignal.timeout(5000) });
-    if (!response.ok) { child.kill('SIGTERM'); throw new Error('Limulus server health check failed.'); }
+    if (!response.ok) { terminate(child); throw new Error('Limulus server health check failed.'); }
     this.endpoint = endpoint;
     return endpoint;
   }
@@ -136,9 +137,9 @@ class Runtime {
     if (!child) return;
     await new Promise(resolve => {
       if (child.exitCode !== null || child.signalCode !== null) { resolve(); return; }
-      const timer = setTimeout(() => child.kill('SIGKILL'), 5000);
+      const timer = setTimeout(() => terminate(child, { signal: 'SIGKILL' }), 5000);
       child.once('exit', () => { clearTimeout(timer); resolve(); });
-      child.kill('SIGTERM');
+      terminate(child);
     });
     if (this.child === child) this.child = null;
   }

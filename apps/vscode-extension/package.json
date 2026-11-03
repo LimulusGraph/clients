@@ -90,9 +90,9 @@
         },
         "limulus.pythonPath": {
           "type": "string",
-          "default": "python3",
+          "default": "",
           "scope": "machine-overridable",
-          "description": "Base Python executable used to create each project .venv and tokenize source previews. Existing project environments are reused."
+          "description": "Base Python executable. Defaults to python on Windows and python3 on macOS/Linux. Used for project environments and source previews."
         }
       }
     },
@@ -124,7 +124,7 @@
     "build": "node scripts/build.mjs",
     "build:webview": "node scripts/build.mjs --webview-only",
     "test": "node --test test/*.test.cjs",
-    "package": "npm run build && python3 scripts/package.py",
+    "package": "npm run build && node ../../scripts/run-python.mjs scripts/package.py",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {},

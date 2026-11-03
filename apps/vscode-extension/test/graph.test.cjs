@@ -52,7 +52,7 @@ test('source resolution rejects traversal and symlink escapes', async t => {
   t.after(() => fs.rm(outside, { recursive: true, force: true }));
   await assert.rejects(sourcePath(filename, '../escape.py'), /outside/);
   await assert.rejects(sourcePath(filename, '/tmp/escape.py'), /relative/);
-  await fs.symlink(outside, path.join(path.dirname(filename), 'linked'));
+  await fs.symlink(outside, path.join(path.dirname(filename), 'linked'), process.platform === 'win32' ? 'junction' : 'dir');
   await assert.rejects(sourcePath(filename, 'linked/model.py'), /outside/);
   const source = await ensureSource(filename, { data: { scriptPath: 'nodes/model.py' } });
   await fs.writeFile(source, 'saved = 1');

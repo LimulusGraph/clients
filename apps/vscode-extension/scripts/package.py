@@ -7,9 +7,9 @@ from xml.sax.saxutils import escape
 
 root = pathlib.Path(__file__).resolve().parent.parent
 package = json.loads((root / 'package.json').read_text())
-system = {'Darwin': 'darwin', 'Linux': 'linux'}[platform.system()]
-arch = {'arm64': 'arm64', 'aarch64': 'arm64', 'x86_64': 'x64'}[platform.machine()]
-binary = root / 'bin' / f'limulus-server-{system}-{arch}'
+system = {'Darwin': 'darwin', 'Linux': 'linux', 'Windows': 'win32'}[platform.system()]
+arch = {'arm64': 'arm64', 'aarch64': 'arm64', 'x86_64': 'x64', 'AMD64': 'x64', 'ARM64': 'arm64'}[platform.machine()]
+binary = root / 'bin' / (f'limulus-server-{system}-{arch}' + ('.exe' if system == 'win32' else ''))
 if not binary.exists() or not (root / 'dist/graph.js').exists():
     raise SystemExit('Run npm run build before packaging.')
 target = f'{system}-{arch}'
@@ -30,7 +30,7 @@ manifest = f'''<?xml version="1.0" encoding="utf-8"?>
 <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/>
 <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true"/></Assets>
 </PackageManifest>'''
-content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="cjs" ContentType="application/javascript"/><Default Extension="css" ContentType="text/css"/><Default Extension="py" ContentType="text/plain"/><Default Extension="LICENSE" ContentType="text/plain"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Default Extension="xml" ContentType="text/xml"/><Default Extension="" ContentType="application/octet-stream"/></Types>'''
+content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="exe" ContentType="application/octet-stream"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="cjs" ContentType="application/javascript"/><Default Extension="css" ContentType="text/css"/><Default Extension="py" ContentType="text/plain"/><Default Extension="LICENSE" ContentType="text/plain"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Default Extension="xml" ContentType="text/xml"/><Default Extension="" ContentType="application/octet-stream"/></Types>'''
 output = root / f"limulus-{package['version']}-{target}.vsix"
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
     archive.writestr('extension.vsixmanifest', manifest)

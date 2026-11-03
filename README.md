@@ -43,27 +43,34 @@ workflow:
 | Start from a terminal and open the local URL. | Install the extension and open a `.lmg` file. |
 
 Both include the execution backend and manage project-local Python environments.
-The applications support **macOS and Linux**. Python 3 with `venv` support is
-required; the browser application also requires **Node.js 22.12 or later**.
+The applications support **Windows, macOS, and Linux**, on x64 and ARM64.
+Python 3 with `venv` support is required. Standalone installers bundle Node.js
+and the execution backend; you do not need npm or Go to run them.
 
 ## Get started
 
-### Browser
+### Standalone application
 
-Extract a `limulus-web-<platform>-<arch>.tar.gz` package for your machine, then
-start it from the extracted folder:
+Choose the installer for your operating system and processor from the
+[clients releases](https://github.com/LimulusGraph/clients/releases):
 
-```sh
-cd limulus-web
-npm start
-```
+| Platform | Installer | Launch |
+| --- | --- | --- |
+| Windows | `limulus-<version>-win32-<arch>-setup.exe` | **Limulus** in the Start menu. Installs for the current user. |
+| macOS | `limulus-<version>-darwin-<arch>.pkg` | **Limulus** in Applications. |
+| Linux (Debian/Ubuntu) | `limulus-<version>-linux-<arch>.deb` | **Limulus** in the application menu, or `limulus` in a terminal. |
 
-Open **http://127.0.0.1:3000**. Keep the terminal open while you work; press
-**Ctrl+C** to stop the app and its Python runtimes. The packaged application
-requires no `npm install`, Go compiler, or separate server.
+The launcher opens your browser at an available local port. Keep its terminal
+window open while you work; press **Ctrl+C** to stop the app and its runtimes.
+Python 3 must be available on your PATH (`python` on Windows, `python3` elsewhere).
+Use `LIMULUS_PYTHON` to select a different interpreter.
 
-To choose another port or Python interpreter, set `PORT` or `LIMULUS_PYTHON` when
-starting the app—for example, `PORT=3002 npm start`.
+Portable archives are available too: extract `limulus-web-<platform>-<arch>.tar.gz`
+and run `./limulus`, or `limulus.cmd` on Windows. Node.js is included. Set `PORT`
+for a fixed port or `LIMULUS_NO_BROWSER=1` to open the browser yourself.
+
+Installers are unsigned unless signing is configured for the build. macOS
+notarization and Windows code-signing certificates are not included in this repository.
 
 ### VS Code
 
@@ -176,11 +183,24 @@ Use `npm run dev` for web development with live reload, or open
 Run `npm test` for the test suite; live runtime tests require localhost binding.
 
 ```sh
-npm run package:web        # Standalone archive in artifacts/
-npm run package:extension  # VSIX in apps/vscode-extension/
+npm run package:installer # Runtime-bundled archive and native installer in artifacts/
+npm run package:extension # VSIX in apps/vscode-extension/
 ```
 
 The npm workspace contains `apps/web` and `apps/vscode-extension`. Shared
 `@limulus` packages in `packages/` provide graph and execution logic (`editor-core`),
 the React editor (`editor-ui`), and filesystem/Python runtime services (`node-host`).
 Both hosts use these packages; application builds stay inside this repository.
+
+CI runs native builds and tests on Windows, macOS, and Linux for x64 and ARM64.
+It resolves `.github/server-ref` (currently `main`) to one immutable backend SHA;
+manual runs can override it with `server_ref`. Each installer and VSIX is tested
+outside the checkout before uploading artifacts. Push a `v<package.json version>`
+tag to publish the installers, archives, VSIX files, checksums, and build metadata
+as a GitHub Release. Marketplace publishing is separate.
+
+Installer builds need `pkgbuild` on macOS, `dpkg-deb` on Linux, or Inno Setup 6 on
+Windows. Package an official Node distribution (as installed by `actions/setup-node`
+or nvm); `NODE_RUNTIME_DIR` can select its root explicitly. The Windows compiler
+can be selected with `ISCC`. Both repositories must be accessible to Actions;
+a private backend repository needs a checkout token with cross-repository read access.

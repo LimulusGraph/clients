@@ -32,7 +32,7 @@ For the universe model and the server-hosted browser interface, visit the
 ## Requirements and installation
 
 - VS Code 1.95 or later.
-- macOS or Linux, with an extension package built for your OS and CPU.
+- Windows, macOS, or Linux, with an extension package built for your OS and CPU.
 - Python 3, with the packages needed by your project.
 
 Install the `.vsix` package using **Extensions → … → Install from VSIX…**. The
@@ -73,7 +73,7 @@ saving (Ctrl+S / Cmd+S) also works.
 
 On first execution, Limulus automatically creates `.venv/` beside the `.lmg`
 file using Python's [venv module](https://docs.python.org/3/library/venv.html).
-Every universe in that folder uses `.venv/bin/python`. Graph files in the same
+Every universe in that folder uses `.venv/bin/python` (`.venv/Scripts/python.exe` on Windows). Graph files in the same
 folder share one environment; separate folders have separate environments.
 An existing valid `.venv` is reused. Global Python packages are not inherited.
 
@@ -86,7 +86,7 @@ matplotlib>=3.8
 ```
 
 Run **Limulus: Install Dependencies** from the Command Palette to create the environment and run
-`.venv/bin/python -m pip install -r requirements.txt` without executing nodes.
+the environment’s Python with `-m pip install -r requirements.txt` without executing nodes.
 Ordinary runs also install requirements automatically on first use in the VS Code
 session and whenever `requirements.txt` changes. Unsaved requirements are saved
 before installation. Pip progress and errors appear in the graph output panel;
@@ -236,7 +236,7 @@ Try [examples/outputs.py](examples/outputs.py) as a node's source file.
 | Setting | Default | Purpose |
 | --- | --- | --- |
 | `limulus.autoStart` | `true` | Starts the backend when a trusted workspace contains `.lmg` files. |
-| `limulus.pythonPath` | `python3` | Base Python for creating project environments and preview tokenization. |
+| `limulus.pythonPath` | Automatic (`python` on Windows, `python3` elsewhere) | Base Python for creating project environments and preview tokenization. |
 | `limulus.serverPath` | empty | Optional path to a compatible backend binary; otherwise uses the bundled binary. |
 
 Apply execution interpreter or backend changes with **Limulus: Restart Server**.
@@ -247,8 +247,7 @@ cannot start, check this output and confirm that the configured Python executabl
 is available.
 
 The extension runs in the workspace extension host and communicates with its
-backend over an authenticated loopback connection. Windows runtimes and
-browser-only VS Code without a remote extension host are unsupported.
+backend over an authenticated loopback connection. Browser-only VS Code without a remote extension host is unsupported.
 
 ## Development
 

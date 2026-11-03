@@ -1,3 +1,4 @@
+const { defaultPython } = require('@limulus/node-host/platform');
 const vscode = require('vscode');
 const path = require('node:path');
 const fs = require('node:fs/promises');
@@ -71,7 +72,7 @@ class PythonPreviewManager {
       const doc = state.document;
       const version = doc.version;
       try {
-        const python = vscode.workspace.getConfiguration('limulus', doc.uri).get('pythonPath', 'python3');
+        const python = vscode.workspace.getConfiguration('limulus', doc.uri).get('pythonPath', '') || defaultPython();
         const parsed = await this.parser(doc.getText(), { python, signal: controller.signal });
         if (state.disposed || controller.signal.aborted || generation !== state.generation || version !== state.document.version) return;
         const directory = path.dirname(doc.uri.fsPath);

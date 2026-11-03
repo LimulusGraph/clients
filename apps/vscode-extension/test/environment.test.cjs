@@ -1,3 +1,4 @@
+const { defaultPython, venvPython } = require('@limulus/node-host/platform');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
@@ -8,7 +9,7 @@ const { ProjectEnvironment, runProcess } = require('../src/environment.cjs');
 test('real venv installs an offline wheel, reuses packages and synchronizes changes', { timeout: 60000 }, async t => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'limulus-pip-'));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
-  await runProcess('python3', ['-c', `import zipfile
+  await runProcess(defaultPython(), ['-c', `import zipfile
 with zipfile.ZipFile('limulus_fixture-1.0-py3-none-any.whl', 'w') as wheel:
     wheel.writestr('limulus_fixture.py', 'answer = 42\\n')
     wheel.writestr('limulus_fixture-1.0.dist-info/METADATA', 'Metadata-Version: 2.1\\nName: limulus-fixture\\nVersion: 1.0\\n')
@@ -18,7 +19,7 @@ with zipfile.ZipFile('limulus_fixture-1.0-py3-none-any.whl', 'w') as wheel:
   const requirements = '--no-index\n./limulus_fixture-1.0-py3-none-any.whl\n';
   await fs.writeFile(path.join(directory, 'requirements.txt'), requirements);
   let installs = 0, resets = 0;
-  const env = new ProjectEnvironment(() => ({ pythonPath: 'python3' }), async (...args) => { if (args[1].includes('pip')) installs++; await runProcess(...args); });
+  const env = new ProjectEnvironment(() => ({ pythonPath: defaultPython() }), async (...args) => { if (args[1].includes('pip')) installs++; await runProcess(...args); });
   const project = path.join(directory, 'graph.lmg');
   const python = await env.prepare(project, () => {}, undefined, false, async () => { resets++; });
   await runProcess(python, ['-c', 'import sys, limulus_fixture; assert sys.prefix != sys.base_prefix; assert limulus_fixture.answer == 42'], directory, () => {});
@@ -66,9 +67,9 @@ test('runtime serializes shared-folder setup and resets live projects before rei
 test('failed pip installs are retried instead of cached as successful', async t => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'limulus-pip-retry-'));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
-  await fs.mkdir(path.join(directory, '.venv/bin'), { recursive: true });
+  await fs.mkdir(path.dirname(venvPython(directory)), { recursive: true });
   await fs.writeFile(path.join(directory, '.venv/pyvenv.cfg'), '');
-  await fs.writeFile(path.join(directory, '.venv/bin/python'), '');
+  await fs.writeFile(venvPython(directory), '');
   await fs.writeFile(path.join(directory, 'requirements.txt'), 'example\n');
   let attempts = 0;
   const env = new ProjectEnvironment(() => ({}), async () => { if (++attempts === 1) throw new Error('pip failed'); });

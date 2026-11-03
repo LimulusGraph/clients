@@ -1,3 +1,4 @@
+const { defaultPython } = require('@limulus/node-host/platform');
 const http = require('node:http');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -36,7 +37,7 @@ async function save(project, graph) {
 // Host owns filesystem access and Python processes; neither enters the browser bundle.
 function createHost({ port = Number(process.env.PORT || 3000), dev = false, runtime: suppliedRuntime } = {}) {
   const runtime = suppliedRuntime || new Runtime(ROOT, () => ({
-    serverPath: process.env.LIMULUS_SERVER_PATH || '', pythonPath: process.env.LIMULUS_PYTHON || 'python3',
+    serverPath: process.env.LIMULUS_SERVER_PATH || '', pythonPath: process.env.LIMULUS_PYTHON || defaultPython(),
   }), { append: value => process.stderr.write(value), appendLine: value => process.stderr.write(value + '\n') });
   const active = new Map();
   const server = http.createServer(async (req, res) => {

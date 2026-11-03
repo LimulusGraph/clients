@@ -1,12 +1,13 @@
+const { defaultPython } = require('@limulus/node-host/platform');
 const MarkdownIt = require('../vendor/markdown-it.cjs');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
 
-function parsePython(source, { python = 'python3', signal } = {}) {
+function parsePython(source, { python = defaultPython(), signal } = {}) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(new Error('Preview cancelled.')); return; }
     // Isolated Python ignores workspace imports, PYTHONPATH, and user site startup code.
-    const child = spawn(python, ['-I', path.join(__dirname, 'preview_parser.py')], { stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(python, ['-I', '-X', 'utf8', path.join(__dirname, 'preview_parser.py')], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     let output = '', errorText = '', settled = false;
     const finish = (error, value) => {
       if (settled) return;

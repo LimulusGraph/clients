@@ -1,3 +1,4 @@
+const { defaultPython, venvPython, terminate } = require('./platform.cjs');
 const { spawn } = require('node:child_process');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -6,13 +7,13 @@ const { createHash } = require('node:crypto');
 function runProcess(executable, args, cwd, emit, signal) {
   signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
-    const child = spawn(executable, args, { cwd, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PIP_DISABLE_PIP_VERSION_CHECK: '1', PIP_NO_INPUT: '1', PYTHONNOUSERSITE: '1' } });
+    const child = spawn(executable, args, { cwd, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, PYTHONUTF8: '1', PIP_DISABLE_PIP_VERSION_CHECK: '1', PIP_NO_INPUT: '1', PYTHONNOUSERSITE: '1' } });
     let tail = '';
     for (const [source, stream] of [['stdout', child.stdout], ['stderr', child.stderr]]) {
       stream.setEncoding('utf8');
       stream.on('data', text => { tail = (tail + text).slice(-3000); emit({ kind: 'log', source, text }); });
     }
-    const abort = () => { try { process.kill(-child.pid, 'SIGKILL'); } catch { child.kill('SIGKILL'); } };
+    const abort = () => terminate(child, { group: true, signal: 'SIGKILL' });
     signal?.addEventListener('abort', abort, { once: true });
     if (signal?.aborted) abort();
     child.once('error', error => { signal?.removeEventListener('abort', abort); reject(error); });
@@ -30,7 +31,7 @@ class ProjectEnvironment {
   async prepare(project, emit, signal, force = false, beforeInstall = async () => {}) {
     const directory = path.dirname(project);
     const environment = path.join(directory, '.venv');
-    const python = path.join(environment, 'bin', 'python');
+    const python = venvPython(directory);
     let exists = true;
     try { await fs.access(path.join(environment, 'pyvenv.cfg')); await fs.access(python); }
     catch { exists = false; }
@@ -41,7 +42,7 @@ class ProjectEnvironment {
       catch (error) { if (error.code !== 'ENOENT') throw error; }
       emit({ kind: 'log', source: 'dependencies', text: `Creating ${environment}\n` });
       try {
-        await this.execute(this.config().pythonPath || 'python3', ['-m', 'venv', environment], directory, emit, signal);
+        await this.execute(this.config().pythonPath || defaultPython(), ['-m', 'venv', environment], directory, emit, signal);
       } catch (error) {
         await fs.rm(environment, { recursive: true, force: true });
         throw error;
