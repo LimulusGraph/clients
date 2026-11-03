@@ -1,0 +1,18 @@
+:root {
+  --lm-foreground: var(--vscode-editor-foreground, #e5e9f0);
+  --lm-background: var(--vscode-editor-background, #171b22);
+  --lm-font-size: var(--vscode-font-size, 13px);
+  --lm-font-family: var(--vscode-font-family, system-ui, sans-serif);
+  --lm-border: var(--vscode-panel-border, #343c4a);
+  --lm-button-foreground: var(--vscode-button-secondaryForeground, #f0f4fa);
+  --lm-button-background: var(--vscode-button-secondaryBackground, #303947);
+  --lm-contrast-border: var(--vscode-contrastBorder, transparent);
+  --lm-button-hover: var(--vscode-button-secondaryHoverBackground, #424e60);
+  --lm-accent: var(--vscode-focusBorder, #6ab7ff);
+  --lm-surface: var(--vscode-editorWidget-background, #222a35);
+  --lm-muted: var(--vscode-descriptionForeground, #a7b2c1);
+  --lm-mono: var(--vscode-editor-font-family, ui-monospace, monospace);
+  --lm-error: var(--vscode-errorForeground, #ff9292);
+  --lm-hover: var(--vscode-list-hoverBackground, #293443);
+  --lm-warning: var(--vscode-editorWarning-foreground, #efc778);
+}

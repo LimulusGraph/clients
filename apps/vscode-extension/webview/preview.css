@@ -1,0 +1,70 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--vscode-editor-foreground); background: var(--vscode-editor-background); font: 14px/1.65 var(--vscode-font-family); }
+header { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 9px 18px; background: var(--vscode-editor-background); border-bottom: 1px solid var(--vscode-panel-border); }
+header span { flex: 1; color: var(--vscode-descriptionForeground); font-size: 11px; }
+button { cursor: pointer; color: var(--vscode-button-secondaryForeground); background: var(--vscode-button-secondaryBackground); border: 1px solid var(--vscode-contrastBorder, transparent); border-radius: 3px; padding: 4px 8px; font: inherit; font-size: 11px; }
+button:focus-visible, a:focus-visible { outline: 1px solid var(--vscode-focusBorder); }
+article { max-width: 940px; margin: 0 auto; padding: 24px 28px 70px; }
+.source-section { position: relative; margin: 0 0 24px; }
+.source-link { display: block; margin: 0 0 6px auto; font-size: 10px; opacity: .65; }
+.source-link:hover { opacity: 1; }
+h1, h2, h3 { line-height: 1.3; margin: 1em 0 .5em; scroll-margin-top: 80px; }
+h1:first-of-type { margin-top: 0; }
+h1 { font-size: 2em; } h2 { font-size: 1.5em; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: .3em; }
+p { margin: .75em 0; } a { color: var(--vscode-textLink-foreground); }
+pre { overflow: auto; background: var(--vscode-textCodeBlock-background); padding: 14px 18px; border-radius: 5px; line-height: 1.5; }
+code { font-family: var(--vscode-editor-font-family); font-size: .93em; }
+:not(pre) > code { background: var(--vscode-textCodeBlock-background); padding: 1px 4px; border-radius: 3px; }
+.python-code { border-left: 3px solid var(--vscode-focusBorder); margin-top: 0; }
+blockquote { border-left: 3px solid var(--vscode-textBlockQuote-border); background: var(--vscode-textBlockQuote-background); margin: 1em 0; padding: .1em 18px; }
+table { border-collapse: collapse; max-width: 100%; overflow: auto; display: block; }
+th, td { border: 1px solid var(--vscode-panel-border); padding: 6px 12px; } th { font-weight: 600; }
+img { max-width: 100%; height: auto; }
+hr { border: 0; border-top: 1px solid var(--vscode-panel-border); }
+#notice { margin: 12px 20px; padding: 10px 14px; border: 1px solid var(--vscode-editorWarning-foreground); color: var(--vscode-descriptionForeground); }
+.empty, .image-placeholder { color: var(--vscode-descriptionForeground); }
+
+/* A continuous document, with source code styled like a compact editor. */
+article { max-width: 1040px; padding: 32px clamp(16px, 4vw, 48px) 80px; }
+.source-section { margin-bottom: 30px; }
+.markdown { padding: 0 6px; }
+.markdown > .source-link { background: transparent; border-color: transparent; color: var(--vscode-descriptionForeground); }
+.code { border: 1px solid var(--vscode-panel-border, #454545); border-radius: 9px; overflow: hidden; background: var(--vscode-editor-background); box-shadow: 0 3px 14px #0000000b; }
+.code-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px; background: var(--vscode-editorWidget-background); border-bottom: 1px solid var(--vscode-panel-border); }
+.language-label { color: var(--vscode-descriptionForeground); font-size: 10px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
+.code-heading .source-link { margin: 0; background: transparent; border-color: transparent; }
+.python-code { margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: var(--vscode-editor-background); tab-size: 4; }
+.python-code code { display: block; font-size: var(--vscode-editor-font-size, 13px); line-height: 1.7; font-weight: var(--vscode-editor-font-weight, normal); }
+.code-line { display: flex; min-width: max-content; min-height: 1.7em; }
+.code-line:hover { background: var(--vscode-editor-lineHighlightBackground, #8888880b); }
+.line-number { flex: 0 0 4.5em; text-align: right; padding: 0 1.2em 0 .8em; color: var(--vscode-editorLineNumber-foreground); user-select: none; }
+.line-content { flex: 1; padding-right: 20px; }
+body { --syntax-keyword: #c586c0; --syntax-string: #ce9178; --syntax-number: #b5cea8; --syntax-comment: #7fa66a; --syntax-function: #dcdcaa; --syntax-class: #4ec9b0; --syntax-builtin: #4fc1ff; }
+body.vscode-light { --syntax-keyword: #8425a0; --syntax-string: #a31515; --syntax-number: #07654b; --syntax-comment: #46733c; --syntax-function: #795e26; --syntax-class: #267f99; --syntax-builtin: #005cc5; }
+body.vscode-high-contrast { --syntax-keyword: #f6a3ee; --syntax-string: #ffb899; --syntax-number: #c8eab6; --syntax-comment: #a6d58d; --syntax-function: #fff4aa; --syntax-class: #6aefda; --syntax-builtin: #88d9ff; }
+body.vscode-high-contrast-light { --syntax-keyword: #650080; --syntax-string: #830000; --syntax-number: #00482f; --syntax-comment: #285423; --syntax-function: #584000; --syntax-class: #00566e; --syntax-builtin: #003a91; }
+.syntax-keyword { color: var(--syntax-keyword); }
+.syntax-string { color: var(--syntax-string); }
+.syntax-number { color: var(--syntax-number); }
+.syntax-comment { color: var(--syntax-comment); font-style: italic; }
+.syntax-function { color: var(--syntax-function); }
+.syntax-class { color: var(--syntax-class); }
+.syntax-builtin { color: var(--syntax-builtin); }
+.syntax-operator { color: var(--vscode-editor-foreground); }
+
+.output-text { margin: 4px 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--vscode-editor-font-family); }
+.output-table { overflow: auto; max-height: 420px; white-space: normal; }
+.output-table table { border-collapse: collapse; font-size: 12px; width: max-content; min-width: 240px; }
+.output-table th, .output-table td { padding: 7px 12px; border-bottom: 1px solid var(--vscode-panel-border, #666); text-align: right; max-width: 360px; overflow-wrap: anywhere; }
+.output-table thead th { position: sticky; top: 0; background: var(--vscode-editorWidget-background); }
+.output-table tbody tr:nth-child(even) { background: var(--vscode-list-hoverBackground); }
+.output-figure { margin: 12px 0; }
+.output-figure img { max-width: 100%; height: auto; background: white; border-radius: 4px; }
+.output-caption, .output-line { color: var(--vscode-descriptionForeground); font-size: 11px; }
+.output-entry { margin: 12px 0; }
+.output-stale { color: var(--vscode-editorWarning-foreground); }
+.stderr { color: var(--vscode-errorForeground); }
+
+#execution { margin: 24px auto; padding: 20px; max-width: 1000px; border-top: 1px solid var(--vscode-panel-border); }
+#universe { max-width: 100%; padding: 6px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); }

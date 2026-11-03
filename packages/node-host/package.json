@@ -1,0 +1,13 @@
+{
+  "name": "@limulus/node-host",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./graph": "./graph.cjs",
+    "./runtime": "./runtime.cjs",
+    "./environment": "./environment.cjs"
+  },
+  "dependencies": {
+    "@limulus/editor-core": "0.1.0"
+  }
+}

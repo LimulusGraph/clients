@@ -1,0 +1,10 @@
+{
+  "version": "0.2.0",
+  "configurations": [{
+    "name": "Run Limulus Extension",
+    "type": "extensionHost",
+    "request": "launch",
+    "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/../../../server/examples/universes"],
+    "preLaunchTask": "Build Limulus"
+  }]
+}

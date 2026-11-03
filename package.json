@@ -1,0 +1,31 @@
+{
+  "name": "@limulus/clients",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @limulus/client-web",
+    "start": "npm start -w @limulus/client-web",
+    "build": "npm run build:web && npm run build:extension",
+    "build:web": "npm run build -w @limulus/client-web",
+    "build:extension": "npm run build -w ./apps/vscode-extension",
+    "build:ui": "npm run build:frontend -w @limulus/client-web && npm run build:webview -w ./apps/vscode-extension",
+    "test": "node --test test/*.test.cjs apps/vscode-extension/test/*.test.cjs",
+    "package:extension": "npm run package -w ./apps/vscode-extension",
+    "package:web": "npm run build:web && node scripts/package-web.mjs"
+  },
+  "devDependencies": {
+    "vite": "8.0.16"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "reactflow": "11.11.4"
+  }
+}

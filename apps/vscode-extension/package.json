@@ -1,0 +1,137 @@
+{
+  "name": "limulus",
+  "displayName": "Limulus",
+  "icon": "logo.jpg",
+  "description": "Concurrent Python universes in a visual graph editor.",
+  "version": "0.1.0",
+  "publisher": "limulus-local",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Data Science",
+    "Visualization"
+  ],
+  "main": "./src/extension.cjs",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.lmg"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false,
+      "description": "Limulus starts Python runtimes and executes project code."
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "limulus.graph",
+        "displayName": "Limulus Graph",
+        "selector": [
+          {
+            "filenamePattern": "*.lmg"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "commands": [
+      {
+        "command": "limulus.newGraph",
+        "title": "Limulus: New Graph"
+      },
+      {
+        "command": "limulus.openGraph",
+        "title": "Limulus: Open Graph"
+      },
+      {
+        "command": "limulus.restartServer",
+        "title": "Limulus: Restart Server"
+      },
+      {
+        "command": "limulus.showOutput",
+        "title": "Limulus: Show Server Output"
+      },
+      {
+        "command": "limulus.previewPython",
+        "title": "Limulus: Preview Python Markdown",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "limulus.saveGraph",
+        "title": "Limulus: Save Graph"
+      },
+      {
+        "command": "limulus.dependencies",
+        "title": "Limulus: View Dependencies"
+      },
+      {
+        "command": "limulus.installDependencies",
+        "title": "Limulus: Install Dependencies"
+      }
+    ],
+    "configuration": {
+      "title": "Limulus",
+      "properties": {
+        "limulus.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Start the backend when a trusted workspace contains a .lmg graph."
+        },
+        "limulus.serverPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "Optional absolute path to a compatible Limulus server binary. Otherwise use the bundled binary."
+        },
+        "limulus.pythonPath": {
+          "type": "string",
+          "default": "python3",
+          "scope": "machine-overridable",
+          "description": "Base Python executable used to create each project .venv and tokenize source previews. Existing project environments are reused."
+        }
+      }
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "limulus.previewPython",
+          "when": "resourceExtname == .py",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "limulus.previewPython",
+          "when": "resourceExtname == .py",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "limulus.previewPython",
+          "when": "resourceExtname == .py",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:webview": "node scripts/build.mjs --webview-only",
+    "test": "node --test test/*.test.cjs",
+    "package": "npm run build && python3 scripts/package.py",
+    "vscode:prepublish": "npm run build"
+  },
+  "devDependencies": {},
+  "private": true,
+  "dependencies": {
+    "@limulus/editor-ui": "0.1.0",
+    "@limulus/editor-core": "0.1.0",
+    "@limulus/node-host": "0.1.0"
+  }
+}

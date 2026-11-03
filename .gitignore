@@ -1,0 +1,7 @@
+node_modules/
+**/dist/
+**/bin/
+*.vsix
+**/*.vsix
+.DS_Store
+artifacts/

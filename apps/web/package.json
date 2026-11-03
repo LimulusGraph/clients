@@ -1,0 +1,17 @@
+{
+  "name": "@limulus/client-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "build": "vite build && node build-backend.mjs",
+    "build:frontend": "vite build",
+    "start": "node server.cjs"
+  },
+  "dependencies": {
+    "@limulus/editor-core": "0.1.0",
+    "@limulus/editor-ui": "0.1.0",
+    "@limulus/node-host": "0.1.0"
+  }
+}

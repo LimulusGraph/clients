@@ -1,0 +1,11 @@
+{
+  "name": "@limulus/editor-core",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./graph": "./graph.cjs",
+    "./output": "./output.cjs",
+    "./events": "./events.cjs",
+    "./execution": "./execution.cjs"
+  }
+}

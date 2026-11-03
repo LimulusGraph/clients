@@ -1,0 +1,18 @@
+.web-app { height: 100%; display: flex; flex-direction: column; }
+.web-menu { background: var(--lm-surface); }
+.tabs { display: flex; overflow: auto; border-bottom: 1px solid var(--lm-border); min-height: 38px; }
+.tab { display: flex; border-right: 1px solid var(--lm-border); white-space: nowrap; }
+.tab button { background: transparent; border-radius: 0; }
+.tab.active { border-bottom: 2px solid var(--lm-accent); background: var(--lm-surface); }
+.project { display: flex; flex: 1; min-height: 0; }
+.project[hidden] { display: none; }
+.canvas { flex: 1; min-width: 0; }
+.source-pane { width: 38%; min-width: 260px; display: flex; flex-direction: column; border-left: 1px solid var(--lm-border); }
+.source-path { padding: 10px; overflow-wrap: anywhere; }
+.source-pane textarea { flex: 1; min-height: 120px; resize: none; background: var(--lm-background); color: var(--lm-foreground); border: none; padding: 16px; font: 13px/1.6 var(--lm-mono); tab-size: 4; }
+.welcome { margin: auto; text-align: center; }
+.palette-overlay { position: fixed; inset: 0; z-index: 100; background: #0008; display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; }
+.palette { background: var(--lm-surface); padding: 12px; border: 1px solid var(--lm-border); border-radius: 8px; width: min(560px, 90vw); box-shadow: 0 12px 50px #0008; display: flex; flex-direction: column; gap: 4px; }
+.palette input { padding: 12px; color: var(--lm-foreground); background: var(--lm-background); border: 1px solid var(--lm-accent); font: inherit; }
+.palette button { text-align: left; }
+@media (max-width: 800px) { .project { flex-direction: column; } .source-pane { width: 100%; height: 40%; border-top: 1px solid var(--lm-border); } }
