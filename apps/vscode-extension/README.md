@@ -17,6 +17,10 @@
 
 ---
 
+> **Active development:** Limulus is under active development, and breaking changes are still occurring.
+> Features, APIs, and file formats may change between versions.
+> **We welcome your feedback!** [Report a bug, suggest a feature, or share your experience](https://github.com/LimulusGraph/clients/issues).
+
 The Limulus extension brings graph-based Python experiments into VS Code. Open
 `.lmg` graphs as visual editors, click nodes to edit their Python files, and run
 independent execution paths with the bundled backend.

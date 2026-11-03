@@ -2,13 +2,8 @@ name: Build and release clients
 
 on:
   push:
-  pull_request:
-  workflow_dispatch:
-    inputs:
-      server_ref:
-        description: 'Backend commit/tag/branch (defaults to .github/server-ref)'
-        required: false
-        type: string
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -25,21 +20,22 @@ jobs:
           persist-credentials: false
       - name: Select backend revision
         id: ref
-        env:
-          SERVER_REF: ${{ inputs.server_ref }}
         run: |
-          ref="${SERVER_REF:-$(cat clients/.github/server-ref)}"
+          ref="$(cat clients/.github/server-ref)"
           if [[ -z "$ref" || "$ref" == *$'\n'* || "$ref" == *$'\r'* ]]; then
             echo 'Expected one nonempty backend revision.' >&2
             exit 1
           fi
           printf 'ref=%s\n' "$ref" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v7
-        with:
-          repository: LimulusGraph/server
-          ref: ${{ steps.ref.outputs.ref }}
-          path: server
-          persist-credentials: false
+      - name: Fetch public backend
+        env:
+          SERVER_REF: ${{ steps.ref.outputs.ref }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          git init server
+          git -C server remote add origin https://github.com/LimulusGraph/server.git
+          git -C server -c credential.helper= -c http.extraHeader= fetch --depth=1 -- origin "$SERVER_REF"
+          git -C server checkout --detach FETCH_HEAD
       - name: Resolve immutable backend commit
         id: revision
         run: echo "sha=$(git -C server rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -80,12 +76,17 @@ jobs:
         with:
           path: clients
           persist-credentials: false
-      - uses: actions/checkout@v7
-        with:
-          repository: LimulusGraph/server
-          ref: ${{ needs.backend_revision.outputs.sha }}
-          path: server
-          persist-credentials: false
+      - name: Fetch pinned public backend
+        working-directory: ${{ github.workspace }}
+        env:
+          SERVER_SHA: ${{ needs.backend_revision.outputs.sha }}
+          GIT_TERMINAL_PROMPT: '0'
+        run: |
+          git init server
+          git -C server remote add origin https://github.com/LimulusGraph/server.git
+          git -C server -c credential.helper= -c http.extraHeader= fetch --depth=1 -- origin "$SERVER_SHA"
+          git -C server checkout --detach FETCH_HEAD
+          test "$(git -C server rev-parse HEAD)" = "$SERVER_SHA"
       - uses: actions/setup-node@v7
         with:
           node-version: '24'

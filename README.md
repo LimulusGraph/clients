@@ -19,6 +19,10 @@
 
 ---
 
+> **Active development:** Limulus is under active development, and breaking changes are still occurring.
+> Features, APIs, and file formats may change between versions.
+> **We welcome your feedback!** [Report a bug, suggest a feature, or share your experience](https://github.com/LimulusGraph/clients/issues).
+
 Branch a data pipeline, compare two models, and follow both ideas to their
 results. Limulus connects ordinary Python files into a visual graph. Every
 complete path becomes an independent experiment—a **universe** with its own
@@ -192,15 +196,7 @@ The npm workspace contains `apps/web` and `apps/vscode-extension`. Shared
 the React editor (`editor-ui`), and filesystem/Python runtime services (`node-host`).
 Both hosts use these packages; application builds stay inside this repository.
 
-CI runs native builds and tests on Windows, macOS, and Linux for x64 and ARM64.
-It resolves `.github/server-ref` (currently `main`) to one immutable backend SHA;
-manual runs can override it with `server_ref`. Each installer and VSIX is tested
-outside the checkout before uploading artifacts. Push a `v<package.json version>`
-tag to publish the installers, archives, VSIX files, checksums, and build metadata
-as a GitHub Release. Marketplace publishing is separate.
-
 Installer builds need `pkgbuild` on macOS, `dpkg-deb` on Linux, or Inno Setup 6 on
-Windows. Package an official Node distribution (as installed by `actions/setup-node`
-or nvm); `NODE_RUNTIME_DIR` can select its root explicitly. The Windows compiler
-can be selected with `ISCC`. Both repositories must be accessible to Actions;
-a private backend repository needs a checkout token with cross-repository read access.
+Windows. Package an official Node distribution (for example, installed with nvm);
+`NODE_RUNTIME_DIR` can select its root explicitly. The Windows compiler can be
+selected with `ISCC`.
