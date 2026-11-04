@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import ReactFlow, { Background, Controls, MiniMap, Handle, Position, applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import ReactFlow, { Background, Controls, MiniMap, Handle, Position, MarkerType, applyNodeChanges, applyEdgeChanges } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './style.css';
 import outputFormat from '@limulus/editor-core/output';
@@ -7,12 +7,14 @@ import execution from '@limulus/editor-core/execution';
 const { renderOutput, appendOutput } = outputFormat;
 
 
-function Node({ id, data, selected }) {
+function Node({ id, data, selected, isConnectable }) {
   return <div className={`node ${selected ? 'selected' : ''}`}>
-    <Handle type="target" position={Position.Left} id="in" />
+    <Handle type="target" position={Position.Left} id="in" isConnectable={isConnectable}
+      title="Input — connect from another node’s output" aria-label="Input port" />
     <div className="node-heading"><span className={`status ${data.runtimeStatus || ''}`} /><strong>{data.title || `Node ${id}`}</strong></div>
     <div className="node-meta">#{id} · {data.scriptPath || 'No source file'}</div>
-    <Handle type="source" position={Position.Right} id="out" />
+    <Handle type="source" position={Position.Right} id="out" isConnectable={isConnectable}
+      title="Output — drag to an input, or click this port then an input" aria-label="Output port" />
   </div>;
 }
 const nodeTypes = { custom: Node };
@@ -39,7 +41,10 @@ export default function GraphEditor({ host }) {
         setNodes(previous => message.graph.nodes.map(node => ({ ...node, type: 'custom', selected: previous.some(n => n.id === node.id && n.selected), data: { ...node.data, runtimeStatus: statusFor(node.id) } })));
         setEdges(message.graph.edges.map(edge => {
           const disabled = edge.data?.disabled === true || String(edge.style?.stroke || '').includes('0.3');
-          return { ...edge, type: 'default', style: { ...edge.style, stroke: disabled ? '#888' : 'var(--lm-accent)', strokeWidth: 2, strokeDasharray: disabled ? '6 4' : undefined } };
+          const color = disabled ? 'var(--lm-muted)' : 'var(--lm-edge)';
+          return { ...edge, type: 'default', interactionWidth: 28,
+            markerEnd: { type: MarkerType.ArrowClosed, color, width: 10, height: 10 },
+            style: { ...edge.style, stroke: color, strokeWidth: 3, opacity: 1, vectorEffect: 'non-scaling-stroke', strokeDasharray: disabled ? '8 5' : undefined } };
         }));
         if (selectedRef.current && !message.graph.nodes.some(n => n.id === selectedRef.current)) { selectedRef.current = null; setSelected(null); }
       } else if (message.type === 'invalid') { setInvalid(true); setError(message.message); }
@@ -93,7 +98,9 @@ export default function GraphEditor({ host }) {
     }}>
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
         nodesDraggable={!locked} nodesConnectable={!locked} deleteKeyCode={null} fitView
-        onNodeClick={(_, node) => { selectedRef.current = node.id; setSelected(node.id); post({ type: 'openNode', id: node.id }); }}
+        connectionRadius={40} connectOnClick={!locked}
+        connectionLineStyle={{ stroke: 'var(--lm-edge)', strokeWidth: 3, vectorEffect: 'non-scaling-stroke' }}
+        onNodeClick={(event, node) => { if (event.target.closest('.react-flow__handle')) return; selectedRef.current = node.id; setSelected(node.id); post({ type: 'openNode', id: node.id }); }}
         onPaneClick={() => { selectedRef.current = null; setSelected(null); }}
         onNodeDragStop={(_, node, moved) => edit({ type: 'move', nodes: (moved?.length ? moved : [node]).map(n => ({ id: n.id, position: n.position })) })}
         onConnect={connection => edit({ type: 'connect', source: connection.source, target: connection.target })}

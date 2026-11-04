@@ -56,16 +56,32 @@ export class WebHost {
       if (title === null) return;
       action = { ...action, title };
     }
-    if (action.type === 'remove') await this.flushSources();
-    const { graph } = await request('edit', { path: this.path, graph: this.graph, action });
-    this.history.push(this.graph); this.future = []; this.graph = graph; this.dirty = true; this.snapshot();
+    if (action.type === 'remove' || action.type === 'rename') await this.flushSources();
+    const { graph, saved } = await request('edit', { path: this.path, graph: this.graph, action });
+    this.history.push(this.graph); this.future = []; this.graph = graph; this.dirty = !saved; this.snapshot();
+    if (action.type === 'rename') await this.refreshSource();
   }
-  undo() { this.assertEditable(); if (this.history.length) { this.future.push(this.graph); this.graph = this.history.pop(); this.dirty = true; this.snapshot(); } }
-  redo() { this.assertEditable(); if (this.future.length) { this.history.push(this.graph); this.graph = this.future.pop(); this.dirty = true; this.snapshot(); } }
+  async restore(from, to) {
+    this.assertEditable();
+    if (!from.length) return;
+    await this.flushSources();
+    const { graph, saved } = await request('restore', { path: this.path, graph: this.graph, target: from.at(-1) });
+    to.push(this.graph); from.pop(); this.graph = graph; this.dirty = !saved; this.snapshot();
+    await this.refreshSource();
+  }
+  undo() { return this.restore(this.history, this.future); }
+  redo() { return this.restore(this.future, this.history); }
+  async refreshSource() {
+    if (!this.sourceId) return;
+    if (this.sourceId !== 'requirements' && !this.graph.nodes.some(node => node.id === this.sourceId)) {
+      this.sourceId = null; this.openSource(null); return;
+    }
+    await this.showSource(this.sourceId);
+  }
   draft(source, code) { this.drafts.set(source.id, { ...source, code }); this.notify(); }
   async showSource(id) {
     const source = this.drafts.get(id) || await request(id === 'requirements' ? 'dependencies' : 'source', { path: this.path, graph: this.graph, id });
-    this.openSource(source);
+    this.sourceId = id; this.openSource(source);
   }
   async saveSource(id, preparing = false) {
     const draft = this.drafts.get(id);

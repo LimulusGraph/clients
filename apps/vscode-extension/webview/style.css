@@ -9,6 +9,7 @@
   --lm-contrast-border: var(--vscode-contrastBorder, transparent);
   --lm-button-hover: var(--vscode-button-secondaryHoverBackground, #424e60);
   --lm-accent: var(--vscode-focusBorder, #6ab7ff);
+  --lm-edge: var(--vscode-textLink-foreground, #8dccff);
   --lm-surface: var(--vscode-editorWidget-background, #222a35);
   --lm-muted: var(--vscode-descriptionForeground, #a7b2c1);
   --lm-mono: var(--vscode-editor-font-family, ui-monospace, monospace);

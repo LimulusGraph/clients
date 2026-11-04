@@ -128,6 +128,11 @@ def verify_extension(clients, node, static_only):
         extension = Path(temporary) / 'extension'
         manifest = json.loads((extension / 'package.json').read_text())
         assert manifest['name'] == 'limulus'
+        graph_language = next(language for language in manifest['contributes']['languages']
+                              if '.lmg' in language.get('extensions', []))
+        for theme in ['light', 'dark']:
+            icon = (extension / graph_language['icon'][theme]).read_bytes()
+            assert icon[:8] == b'\x89PNG\r\n\x1a\n' and icon[25] == 6, 'Expected an RGBA PNG file icon'
         for filename in ['dist/graph.js', 'dist/graph.css', 'dist/preview.js', 'src/preview_parser.py']:
             assert (extension / filename).is_file(), filename
         code = """

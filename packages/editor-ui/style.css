@@ -9,6 +9,7 @@
   --lm-contrast-border: transparent;
   --lm-button-hover: #424e60;
   --lm-accent: #6ab7ff;
+  --lm-edge: #8dccff;
   --lm-surface: #222a35;
   --lm-muted: #a7b2c1;
   --lm-mono: ui-monospace, monospace;
@@ -29,6 +30,19 @@ button:focus-visible, select:focus-visible { outline: 1px solid var(--lm-accent)
 .graph { flex: 1; min-height: 160px; position: relative; }
 .node { min-width: 180px; max-width: 300px; padding: 13px 16px; border: 1px solid var(--lm-border, #666); border-radius: 7px; background: var(--lm-surface); }
 .node.selected { border-color: var(--lm-accent); box-shadow: 0 0 0 1px var(--lm-accent); }
+.node .react-flow__handle { width: 32px; height: 32px; border: 0; background: transparent; border-radius: 50%; }
+.node .react-flow__handle-left { left: -16px; }
+.node .react-flow__handle-right { right: -16px; }
+.node .react-flow__handle::after { content: ''; position: absolute; inset: 8px; border: 2px solid var(--lm-edge); border-radius: 50%; background: var(--lm-surface); box-shadow: 0 0 0 2px var(--lm-background); pointer-events: none; }
+.node .react-flow__handle.source::after { background: var(--lm-edge); }
+.node .react-flow__handle.connectionindicator:hover::after,
+.node .react-flow__handle.connecting::after { inset: 5px; box-shadow: 0 0 0 4px var(--lm-background), 0 0 0 6px var(--lm-edge); }
+.node .react-flow__handle:not(.connectable)::after { border-color: var(--lm-muted); }
+.react-flow__edge-path, .react-flow__connection-path { stroke-linecap: round; filter: drop-shadow(0 0 2px var(--lm-background)); }
+.react-flow__edge:hover .react-flow__edge-path,
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge:focus-visible .react-flow__edge-path { stroke-width: 5 !important; }
+.react-flow__edge-interaction { vector-effect: non-scaling-stroke; cursor: pointer; }
 .node-heading { display: flex; align-items: center; gap: 8px; }
 .node-meta { margin-top: 7px; font-size: 11px; color: var(--lm-muted); overflow-wrap: anywhere; }
 .status { width: 7px; height: 7px; border-radius: 50%; background: var(--lm-muted); }

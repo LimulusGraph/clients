@@ -16,10 +16,19 @@ function parseGraph(text) {
   return graph;
 }
 
+function sourceName(title) {
+  const name = title.trim().slice(0, 120).normalize('NFKD').replace(/\p{M}/gu, '')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2').replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '');
+  if (!name) throw new Error('Enter a node name containing letters or numbers.');
+  // Keep filenames usable on Windows and as Python module names.
+  return (/^\d/u.test(name) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/.test(name) ? `node_${name}` : name) + '.py';
+}
+
 function nextNumber(graph) {
   let next = Number.isInteger(graph.nextNodeId) ? Math.max(1, graph.nextNodeId) : 1;
   for (const node of graph.nodes) {
-    for (const value of [node.id, /^nodes\/(\d+)\.py$/.exec(node.data.scriptPath || '')?.[1]]) {
+    for (const value of [node.id, /^nodes\/(?:node_)?(\d+)\.py$/.exec(node.data.scriptPath || '')?.[1]]) {
       if (!/^\d+$/.test(value || '')) continue;
       const n = Number(value);
       if (n >= 1 && n <= 9999) next = Math.max(next, n + 1);
@@ -75,4 +84,4 @@ function mutateGraph(graph, action) {
   }
   return graph;
 }
-module.exports = { parseGraph, nextNumber, mutateGraph };
+module.exports = { parseGraph, nextNumber, mutateGraph, sourceName };

@@ -1,0 +1,5 @@
+Tool: built-in image generation/editing tool, with transparent_background=true.
+Source: logo.jpg
+Output: file-icon.png
+
+Use case: background-extraction. Edit target: the supplied Limulus logo. Remove only the white background and ALL external ground/drop shadow beneath and around the horseshoe crab. Output a clean PNG cutout with real transparent alpha, including transparent gaps between legs. Preserve the exact mascot, pose, face, teal colors, colorful connected graph nodes, outlines, and internal shading/highlights. No redesign, no white border, no halo, no new shadow. Square canvas with the entire mascot including tail and legs visible, tight framing with small transparent margins. Asset: VS Code Explorer file icon.

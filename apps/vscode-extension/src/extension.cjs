@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const { randomBytes } = require('node:crypto');
 const { Runtime } = require('./runtime.cjs');
 const { PythonPreviewManager } = require('./preview.cjs');
-const { parseGraph, ensureSource, addNode, mutateGraph } = require('./graph.cjs');
+const { parseGraph, ensureSource, addNode, mutateGraph, planNodeRename } = require('./graph.cjs');
 
 let runtime;
 let provider;
@@ -91,6 +91,7 @@ class GraphProvider {
     if (!action || typeof action.type !== 'string') throw new Error('Invalid graph edit.');
     const doc = session.document, version = doc.version;
     const graph = parseGraph(doc.getText());
+    let sourceMove;
     if (action.type === 'add') {
       const count = graph.nodes.length;
       await addNode(graph, doc.uri.fsPath, { x: 80 + (count % 5) * 60, y: 80 + (count % 5) * 60 });
@@ -99,10 +100,16 @@ class GraphProvider {
       if (!node) throw new Error('Node no longer exists.');
       const title = await vscode.window.showInputBox({ prompt: `Name for node ${node.id}`, value: node.data.title || `Node ${node.id}`, validateInput: value => value.trim() ? undefined : 'Enter a name.' });
       if (title === undefined) return;
-      mutateGraph(graph, { ...action, title });
+      if (doc.version !== version) throw new Error('The graph changed while editing. Please try again.');
+      sourceMove = await planNodeRename(graph, doc.uri.fsPath, node.id, title);
+      node.data.title = sourceMove.title;
+      node.data.scriptPath = sourceMove.scriptPath;
     } else mutateGraph(graph, action);
     if (doc.version !== version) throw new Error('The graph changed while editing. Please try again.');
     const edit = new vscode.WorkspaceEdit();
+    if (sourceMove && sourceMove.from !== sourceMove.to) {
+      edit.renameFile(vscode.Uri.file(sourceMove.from), vscode.Uri.file(sourceMove.to), { overwrite: false, ignoreIfExists: false });
+    }
     edit.replace(doc.uri, new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length)), JSON.stringify(graph, null, 2) + '\n');
     if (!await vscode.workspace.applyEdit(edit)) throw new Error('VS Code could not apply the graph edit.');
     session.update();

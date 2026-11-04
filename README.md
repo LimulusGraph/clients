@@ -23,6 +23,8 @@
 > Features, APIs, and file formats may change between versions.
 > **We welcome your feedback!** [Report a bug, suggest a feature, or share your experience](https://github.com/LimulusGraph/clients/issues).
 
+> **Recommended workspace:** We recommend using the [VS Code extension](apps/vscode-extension/README.md) for Limulus. It brings graph editing, Python source navigation, and previews into your editor. The standalone browser app is also available.
+
 Branch a data pipeline, compare two models, and follow both ideas to their
 results. Limulus connects ordinary Python files into a visual graph. Every
 complete path becomes an independent experiment—a **universe** with its own
@@ -103,7 +105,12 @@ Building from source? Follow the short [development guide](#development) below.
    output panel.
 
 Double-click a connection to enable or disable it. Rename or remove nodes with
-the graph toolbar; removing a node retains its Python file.
+the graph toolbar. Renaming a node also renames its Python file to snake_case
+(for example, “Train Model” becomes `train_model.py`) in the same folder, keeping
+its contents and node ID. Existing filenames are never overwritten; a source file
+shared by multiple nodes must be separated before renaming. Undo/Redo restores
+both the title and filename. In the browser, renaming saves source drafts and the
+graph together. Removing a node retains its Python file.
 
 In the browser, **Open…** accepts a local `.lmg` path. New graphs begin in temporary
 folders, so use **Save As…** to keep them. Save As copies source files and
@@ -187,9 +194,14 @@ Use `npm run dev` for web development with live reload, or open
 Run `npm test` for the test suite; live runtime tests require localhost binding.
 
 ```sh
+npm run package:web       # Runtime-bundled web archive in artifacts/
 npm run package:installer # Runtime-bundled archive and native installer in artifacts/
-npm run package:extension # VSIX in apps/vscode-extension/
+npm run package:extension # VSIX in artifacts/
 ```
+
+Local web bundles and backend binaries are generated in `apps/web/dist/` and
+`apps/web/bin/`. Distributable archives, installers, and VSIX packages go into
+`artifacts/`. These generated folders are ignored by Git.
 
 The npm workspace contains `apps/web` and `apps/vscode-extension`. Shared
 `@limulus` packages in `packages/` provide graph and execution logic (`editor-core`),

@@ -131,7 +131,6 @@ jobs:
           node scripts/package-web.mjs
           python scripts/package-installer.py
           python apps/vscode-extension/scripts/package.py
-          cp apps/vscode-extension/*.vsix artifacts/
       - name: Verify standalone and extension packages outside the checkout
         run: python scripts/verify_web_package.py --clients . --server ../server
       - name: Verify native installer payload and launch

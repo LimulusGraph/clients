@@ -27,6 +27,17 @@
     "virtualWorkspaces": false
   },
   "contributes": {
+    "languages": [
+      {
+        "id": "limulus-graph",
+        "aliases": ["Limulus Graph"],
+        "extensions": [".lmg"],
+        "icon": {
+          "light": "./file-icon.png",
+          "dark": "./file-icon.png"
+        }
+      }
+    ],
     "customEditors": [
       {
         "viewType": "limulus.graph",

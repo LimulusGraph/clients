@@ -55,14 +55,19 @@ Run **Limulus: New Graph** from the Command Palette and choose where to save the
 `.lmg` file. To open a project, use **Limulus: Open Graph** or open its `.lmg` file
 in Explorer. If it opens as JSON, choose **Reopen Editor With… → Limulus Graph**.
 
+The extension associates `.lmg` files with a transparent, shadow-free Limulus logo
+in Explorer and editor tabs. Reload VS Code after installing an updated extension. The logo appears with
+file icon themes that support language icons, such as Seti; themes that disable
+language icons or provide their own `.lmg` icon may override it.
+
 | Action | Behavior |
 | --- | --- |
-| **＋ Node** | Creates a node with a numeric ID from 1–9999 and a source file at `nodes/<id>.py`. |
+| **＋ Node** | Creates a node with a numeric ID from 1–9999, a title such as “Node 1”, and a matching source file at `nodes/node_1.py`. |
 | Click a node | Opens its Python file beside the graph. Pin the source tab to keep it open when selecting another node. |
 | Drag a node | Changes its position. |
 | Drag between handles | Connects two nodes. Connections that would create a cycle are rejected. |
 | Double-click a connection | Enables or disables it. Disabled connections are excluded from execution paths. |
-| **Rename** | Changes the selected node's title while keeping its ID and source filename. |
+| **Rename** | Changes the selected node's title and renames its source file to snake_case (for example, “Train Model” → `train_model.py`), keeping its ID and source folder. Undo/Redo restores both changes. Existing filenames are never overwritten; shared source files must be separated before renaming. |
 | **Delete selected** or Delete | Removes selected nodes or connections from the graph. Python files are retained. |
 | **Limulus: Save Graph**, Undo, Redo | Uses VS Code's normal document editing workflow. |
 

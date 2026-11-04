@@ -13,7 +13,7 @@ function Project({ host, active }) {
     {source && <aside className="source-pane">
       <header><strong>{source.title || source.id}{host.drafts.has(source.id) ? ' •' : ''}</strong><span className="spacer" />
         <button disabled={host.running} onClick={() => host.enqueue(() => host.saveSource(source.id)).catch(() => {})}>Save source</button>
-        <button onClick={() => setSource(null)} aria-label="Close source editor">×</button>
+        <button onClick={() => { host.sourceId = null; setSource(null); }} aria-label="Close source editor">×</button>
       </header>
       <small className="source-path">{source.filename}</small>
       <textarea aria-label="Source code" spellCheck={false} value={source.code} readOnly={host.running}

@@ -16,6 +16,11 @@ target = f'{system}-{arch}'
 icon = root / package['icon']
 if not icon.is_file():
     raise SystemExit(f'Extension icon is missing: {icon}')
+language_icons = {root / filename for language in package['contributes'].get('languages', [])
+                  for filename in language.get('icon', {}).values()}
+for language_icon in language_icons:
+    if not language_icon.is_file():
+        raise SystemExit(f'Language icon is missing: {language_icon}')
 manifest = f'''<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
 <Metadata><Identity Language="en-US" Id="limulus" Version="{package['version']}" Publisher="{package['publisher']}" TargetPlatform="{target}"/>
@@ -30,12 +35,14 @@ manifest = f'''<?xml version="1.0" encoding="utf-8"?>
 <Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/>
 <Asset Type="Microsoft.VisualStudio.Services.Content.Details" Path="extension/README.md" Addressable="true"/></Assets>
 </PackageManifest>'''
-content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="exe" ContentType="application/octet-stream"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="cjs" ContentType="application/javascript"/><Default Extension="css" ContentType="text/css"/><Default Extension="py" ContentType="text/plain"/><Default Extension="LICENSE" ContentType="text/plain"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Default Extension="xml" ContentType="text/xml"/><Default Extension="" ContentType="application/octet-stream"/></Types>'''
-output = root / f"limulus-{package['version']}-{target}.vsix"
+content_types = '''<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="exe" ContentType="application/octet-stream"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Default Extension="json" ContentType="application/json"/><Default Extension="js" ContentType="application/javascript"/><Default Extension="cjs" ContentType="application/javascript"/><Default Extension="css" ContentType="text/css"/><Default Extension="py" ContentType="text/plain"/><Default Extension="LICENSE" ContentType="text/plain"/><Default Extension="md" ContentType="text/markdown"/><Default Extension="vsixmanifest" ContentType="text/xml"/><Default Extension="xml" ContentType="text/xml"/><Default Extension="" ContentType="application/octet-stream"/></Types>'''
+artifacts = root.parent.parent / 'artifacts'
+artifacts.mkdir(parents=True, exist_ok=True)
+output = artifacts / f"limulus-{package['version']}-{target}.vsix"
 with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
     archive.writestr('extension.vsixmanifest', manifest)
     archive.writestr('[Content_Types].xml', content_types)
-    for file in [root / 'README.md', icon, binary, *sorted((root / 'src').glob('*.cjs')), *sorted((root / 'src').glob('*.py')), *sorted((root / 'vendor').glob('*')), *sorted((root / 'dist').glob('*'))]:
+    for file in [root / 'README.md', icon, *sorted(language_icons - {icon}), binary, *sorted((root / 'src').glob('*.cjs')), *sorted((root / 'src').glob('*.py')), *sorted((root / 'vendor').glob('*')), *sorted((root / 'dist').glob('*'))]:
         if file.is_file():
             archive.write(file, 'extension/' + str(file.relative_to(root)))
     packaged = dict(package, name='limulus')

@@ -29,7 +29,7 @@ async function setup(t, runtime) {
     host.fetch = global.fetch;
   }
   t.after(() => host.close());
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'limulus-workspace-test-'));
+  const directory = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'limulus-workspace-test-')));
   t.after(() => fs.rm(directory, { recursive: true, force: true }));
   const project = path.join(directory, 'graph.lmg');
   await fs.writeFile(project, '{"nodes":[],"edges":[],"custom":{"keep":true}}');
@@ -49,7 +49,7 @@ test('web host preserves metadata, source files and Undo IDs, rejects cycles, re
   await post('source', { graph, id: '1', code: 'print(42)\n' });
   const afterUndo = await post('edit', { graph: empty, action: { type: 'add' } });
   assert.equal(afterUndo.graph.nodes[0].id, '2');
-  assert.equal(await fs.readFile(path.join(directory, 'nodes/1.py'), 'utf8'), 'print(42)\n');
+  assert.equal(await fs.readFile(path.join(directory, 'nodes/node_1.py'), 'utf8'), 'print(42)\n');
   ({ graph } = await post('edit', { graph, action: { type: 'add' } }));
   ({ graph } = await post('edit', { graph, action: { type: 'connect', source: '1', target: '3' } }));
   await assert.rejects(post('edit', { graph, action: { type: 'connect', source: '3', target: '1' } }), /cycle/);
@@ -58,7 +58,7 @@ test('web host preserves metadata, source files and Undo IDs, rejects cycles, re
   await post('dependencies', { code: '# no third-party requirements\n' });
   const destination = path.join(directory, 'copy', 'copy.lmg');
   await post('save-as', { graph, destination });
-  assert.equal(await fs.readFile(path.join(directory, 'copy/nodes/1.py'), 'utf8'), 'print(42)\n');
+  assert.equal(await fs.readFile(path.join(directory, 'copy/nodes/node_1.py'), 'utf8'), 'print(42)\n');
   assert.equal(await fs.readFile(path.join(directory, 'copy/requirements.txt'), 'utf8'), '# no third-party requirements\n');
   await assert.rejects(post('save-as', { graph, destination }), /already exists/);
   const bad = { nodes: [{ id: '1', data: { scriptPath: '../escape.py' } }], edges: [] };
@@ -69,7 +69,7 @@ test('web adapter uses the shared editor contract, flushes drafts, and keeps run
   const calls = [];
   const runtime = { async dispose() {}, async run(project, id, mode, emit) {
     calls.push({ project, mode });
-    if (mode !== 'reset') assert.equal(await fs.readFile(path.join(path.dirname(project), 'nodes/1.py'), 'utf8'), 'answer = 42\n');
+    if (mode !== 'reset') assert.equal(await fs.readFile(path.join(path.dirname(project), 'nodes/node_1.py'), 'utf8'), 'answer = 42\n');
     emit({ kind: 'node_started', node_id: '1', route_id: 'a' });
     emit({ kind: 'completed', success: true });
   } };
@@ -92,7 +92,7 @@ test('web adapter uses the shared editor contract, flushes drafts, and keeps run
   assert.ok(messages.some(message => message.type === 'event' && message.event.kind === 'completed'));
   const saved = JSON.parse(await fs.readFile(project, 'utf8'));
   assert.equal(saved.nodes[0].data.runtimeStatus, undefined);
-  adapter.undo();
+  await adapter.undo();
   const text = await fs.readFile(project, 'utf8');
   await adapter.dispose();
   assert.equal(await fs.readFile(project, 'utf8'), text, 'closing must not save an undone graph');
@@ -133,4 +133,56 @@ test('failed web setup restores editor state and closing an unused tab never sta
   assert.equal(messages.at(-1).type, 'running');
   assert.equal(messages.at(-1).value, false);
   assert.ok(messages.some(message => message.type === 'event' && message.event.text === 'Setup failed'));
+});
+
+test('browser rename saves drafts and graph, refreshes source, and moves files on Undo/Redo', async t => {
+  const { host, post, project, directory } = await setup(t, { async dispose() {} });
+  const { WebHost } = await import('../apps/web/src/host.js');
+  const originalFetch = global.fetch, originalWindow = global.window;
+  global.fetch = (url, options) => host.fetch(url, options);
+  global.window = { prompt: () => 'TrainModel' };
+  t.after(() => { global.fetch = originalFetch; global.window = originalWindow; });
+  let displayed;
+  const adapter = new WebHost(await post('open'), () => {}, value => { displayed = value; });
+  await adapter.edit({ type: 'add' });
+  await adapter.showSource('1');
+  adapter.draft(displayed, 'model = 42\n');
+  await adapter.edit({ type: 'rename', id: '1' });
+  const target = path.join(directory, 'nodes/train_model.py');
+  const old = path.join(directory, 'nodes/node_1.py');
+  assert.equal(displayed.filename, target);
+  assert.equal(displayed.title, 'TrainModel');
+  assert.equal(displayed.code, 'model = 42\n');
+  assert.equal(adapter.drafts.size, 0);
+  assert.equal(adapter.dirty, false);
+  assert.equal(JSON.parse(await fs.readFile(project, 'utf8')).nodes[0].data.scriptPath, 'nodes/train_model.py');
+  await assert.rejects(fs.access(old), { code: 'ENOENT' });
+  adapter.draft(displayed, 'model = 43\n');
+  await adapter.undo();
+  assert.equal(displayed.filename, old);
+  assert.equal(displayed.title, 'Node 1');
+  assert.equal(await fs.readFile(old, 'utf8'), 'model = 43\n');
+  await assert.rejects(fs.access(target), { code: 'ENOENT' });
+  await adapter.redo();
+  assert.equal(displayed.filename, target);
+  assert.equal(await fs.readFile(target, 'utf8'), 'model = 43\n');
+  // An unrelated file created at the old path must block Undo without consuming history.
+  await fs.writeFile(old, 'do not replace\n');
+  const historyLength = adapter.history.length;
+  await assert.rejects(adapter.undo(), /already exists/);
+  assert.equal(adapter.history.length, historyLength);
+  assert.equal(adapter.graph.nodes[0].data.scriptPath, 'nodes/train_model.py');
+  assert.equal(await fs.readFile(old, 'utf8'), 'do not replace\n');
+});
+
+test('browser rename rolls back the file move when saving the graph fails', async t => {
+  const { post, directory, project } = await setup(t, { async dispose() {} });
+  let { graph } = await post('open');
+  ({ graph } = await post('edit', { graph, action: { type: 'add' } }));
+  await post('source', { graph, id: '1', code: 'important = True\n' });
+  await fs.unlink(project);
+  await fs.mkdir(project); // A directory cannot be replaced by the graph file.
+  await assert.rejects(post('edit', { graph, action: { type: 'rename', id: '1', title: 'New name' } }));
+  assert.equal(await fs.readFile(path.join(directory, 'nodes/node_1.py'), 'utf8'), 'important = True\n');
+  await assert.rejects(fs.access(path.join(directory, 'nodes/new_name.py')), { code: 'ENOENT' });
 });

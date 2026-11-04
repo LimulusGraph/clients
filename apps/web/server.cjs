@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const { Runtime } = require('@limulus/node-host/runtime');
-const { parseGraph, mutateGraph, addNode, ensureSource, sourcePath } = require('@limulus/node-host/graph');
+const { parseGraph, mutateGraph, addNode, ensureSource, sourcePath, planNodeRename, planSourceMove, moveSource } = require('@limulus/node-host/graph');
 const ROOT = __dirname;
 
 async function body(request) {
@@ -32,6 +32,15 @@ async function save(project, graph) {
     await fs.writeFile(temporary, JSON.stringify(graph, null, 2) + '\n');
     await fs.rename(temporary, project);
   } finally { await fs.rm(temporary, { force: true }); }
+}
+
+async function saveSourceMove(project, graph, move) {
+  await moveSource(move);
+  try { await save(project, graph); }
+  catch (error) {
+    await moveSource({ from: move.to, to: move.from });
+    throw error;
+  }
 }
 
 // Host owns filesystem access and Python processes; neither enters the browser bundle.
@@ -75,8 +84,29 @@ function createHost({ port = Number(process.env.PORT || 3000), dev = false, runt
             if (input.action?.type === 'add') {
               const offset = (graph.nodes.length % 5) * 60;
               await addNode(graph, project, { x: 80 + offset, y: 80 + offset });
+            } else if (input.action?.type === 'rename') {
+              const move = await planNodeRename(graph, project, input.action.id, input.action.title);
+              const node = graph.nodes.find(n => n.id === input.action.id);
+              node.data.title = move.title;
+              node.data.scriptPath = move.scriptPath;
+              await saveSourceMove(project, graph, move);
+              result = { graph, saved: true }; break;
             } else mutateGraph(graph, input.action);
             result = { graph }; break;
+          }
+          case '/api/restore': {
+            const current = graphFrom(input.graph), graph = graphFrom(input.target);
+            const changed = graph.nodes.filter(node => {
+              const before = current.nodes.find(n => n.id === node.id);
+              return before && before.data.scriptPath !== node.data.scriptPath;
+            });
+            if (changed.length > 1) throw new Error('Undo can rename only one source file at a time.');
+            if (changed.length) {
+              const node = changed[0];
+              const move = await planSourceMove(current, project, node.id, node.data.scriptPath);
+              await saveSourceMove(project, graph, move);
+            }
+            result = { graph, saved: changed.length > 0 }; break;
           }
           case '/api/save': {
             const graph = graphFrom(input.graph); await save(project, graph); result = { graph }; break;
