@@ -104,7 +104,19 @@ jobs:
           EXPECTED_TARGET: ${{ matrix.target }}
         run: node -e 'if (`${process.platform}-${process.arch}` !== process.env.EXPECTED_TARGET) throw new Error("Runner architecture mismatch")'
       - name: Install workspace dependencies
-        run: npm ci
+        id: install
+        run: |
+          node --version
+          npm --version
+          npm ci --logs-dir "$RUNNER_TEMP/limulus-npm-logs"
+      - name: Upload npm install logs on failure
+        if: failure() && steps.install.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-debug-${{ matrix.target }}
+          path: ${{ runner.temp }}/limulus-npm-logs/
+          if-no-files-found: warn
+          retention-days: 7
       - name: Build standalone app and VS Code extension
         run: npm run build
       - name: Test shared editor and both hosts
