@@ -77,8 +77,9 @@ test('stale parse results do not overwrite newer source', async () => {
 
 test('local asset paths cannot leave the source directory', () => {
   const { localAsset } = setup();
-  assert.equal(localAsset('/project', 'plots/plot.png'), '/project/plots/plot.png');
-  for (const value of ['../secret', '%2e%2e/secret', '/tmp/x', 'command:foo', 'file:///tmp/x', 'a\\b']) assert.equal(localAsset('/project', value), null);
+  const base = path.resolve('/project');
+  assert.equal(localAsset(base, 'plots/plot.png'), path.join(base, 'plots', 'plot.png'));
+  for (const value of ['../secret', '%2e%2e/secret', '/tmp/x', 'command:foo', 'file:///tmp/x', 'a\\b']) assert.equal(localAsset(base, value), null);
 });
 
 
